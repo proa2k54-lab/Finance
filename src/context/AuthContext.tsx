@@ -20,34 +20,17 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
+     if (currentUser) {
   setUser(currentUser);
-
-  try {
-    const userRef = doc(db, 'users', currentUser.uid);
-    const userDoc = await getDoc(userRef);
-
-    if (!userDoc.exists()) {
-      await setDoc(userRef, {
-        totalBalance: 0,
-        totalDebt: 0,
-        totalLent: 0,
-        updatedAt: serverTimestamp()
-      });
-    }
-  } catch (error) {
-    console.error(error);
-  }
-
-  setLoading(false);
 } else {
   setUser(null);
-  setLoading(false);
 }
+
+setLoading(false);
     });
 
     return () => unsubscribe();
