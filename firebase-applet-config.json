@@ -1,10 +1,9 @@
 {
-  "projectId": "silent-carving-gcf5x",
-  "appId": "1:98203529580:web:4a58c84150c5a447604349",
-  "apiKey": "AIzaSyC4dCJN_mWwXhDLteJU9_sKSuNvgPFMe54",
-  "authDomain": "silent-carving-gcf5x.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-72715450-9951-442e-a080-ab2f08bd80fe",
-  "storageBucket": "silent-carving-gcf5x.firebasestorage.app",
-  "messagingSenderId": "98203529580",
-  "measurementId": ""
+  "apiKey": "AIzaSyB3oqWyWplsPYq1JX9ILxO1S0EFke2zD1E",
+  "authDomain": "finance-app-8e4f5.firebaseapp.com",
+  "projectId": "finance-app-8e4f5",
+  "storageBucket": "finance-app-8e4f5.firebasestorage.app",
+  "messagingSenderId": "636248368184",
+  "appId": "1:636248368184:web:3b81b4f8e7a4830d8e32cd",
+  "measurementId": "G-DF167XV3KK"
 }
