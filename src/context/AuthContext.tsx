@@ -38,8 +38,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       totalLent: 0,
       updatedAt: serverTimestamp()
     });
-  }
- catch (error) {
+    }
+  } catch (error) {
   console.error(error);
   setUser(currentUser);
 }
