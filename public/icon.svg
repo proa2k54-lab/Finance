@@ -1,4 +1,7 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="512" height="512" rx="100" fill="#1A1A1A"/>
-<path d="M256 128L384 320H128L256 128Z" fill="#C5A059"/>
+<svg width="512" height="512" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="40" height="40" rx="12" fill="#C9A15A"/>
+  <g transform="translate(10, 9.5)">
+    <path d="M 0 10 A 10 10 0 0 1 20 10 L 20 12 C 20 13.1 19.1 14 18 14 L 2 14 C 0.9 14 0 13.1 0 12 Z" fill="white" />
+    <path d="M 5 14 L 15 14 L 15 22 C 15 23.1 14.1 24 13 24 L 7 24 C 5.9 24 5 23.1 5 22 Z" fill="white" />
+  </g>
 </svg>
