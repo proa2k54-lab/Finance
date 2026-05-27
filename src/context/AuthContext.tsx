@@ -23,24 +23,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-    console.log("AUTH STATE", currentUser);
-    setUser(currentUser);
-    setLoading(false);
-  });
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        // Initialize user stats if not exists
+        try {
+          const userRef = doc(db, 'users', currentUser.uid);
+          const userDoc = await getDoc(userRef);
+          if (!userDoc.exists()) {
+            await setDoc(userRef, {
+              totalBalance: 0,
+              totalDebt: 0,
+              totalLent: 0,
+              updatedAt: serverTimestamp()
+            });
+          }
+        } catch (error) {
+           handleFirestoreError(error, OperationType.GET, `users/${currentUser.uid}`);
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
 
     return () => unsubscribe();
   }, []);
 
   const signIn = async () => {
-  const provider = new GoogleAuthProvider();
-
-  try {
-    await signInWithRedirect(auth, provider);
-  } catch (error) {
-    console.error("Error signing in:", error);
-  }
-};
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithRedirect(auth, provider);
+    } catch (error) {
+      console.error('Error signing in', error);
+    }
+  };
 
   const logOut = async () => {
     try {
