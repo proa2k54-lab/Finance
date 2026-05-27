@@ -1,0 +1,6 @@
+{
+  "name": "Personal Finance",
+  "description": "Manage your expenses, funds, and debts seamlessly.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

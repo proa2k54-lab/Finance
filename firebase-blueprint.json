@@ -1,0 +1,76 @@
+{
+  "entities": {
+    "UserStats": {
+      "title": "User Stats",
+      "description": "User overall balances",
+      "type": "object",
+      "properties": {
+        "totalBalance": { "type": "number" },
+        "totalDebt": { "type": "number" },
+        "totalLent": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["totalBalance", "totalDebt", "totalLent", "updatedAt"]
+    },
+    "Fund": {
+      "title": "Fund",
+      "description": "A budget category or wallet (e.g. Needs, Wants)",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "balance": { "type": "number" },
+        "color": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["name", "balance", "createdAt", "updatedAt"]
+    },
+    "Debt": {
+      "title": "Debt",
+      "description": "Money borrowed or lent",
+      "type": "object",
+      "properties": {
+        "contactName": { "type": "string" },
+        "type": { "type": "string", "enum": ["borrowed", "lent"] },
+        "amount": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["contactName", "type", "amount", "createdAt", "updatedAt"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial transaction",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["income", "expense", "debt_increase", "debt_decrease", "lend_increase", "lend_decrease"] },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "contact": { "type": "string" },
+        "fundId": { "type": "string" },
+        "debtId": { "type": "string" },
+        "date": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["type", "amount", "description", "date", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserStats",
+      "description": "Main user state and totals"
+    },
+    "/users/{userId}/funds/{fundId}": {
+      "schema": "Fund",
+      "description": "User's funds or budgets"
+    },
+    "/users/{userId}/debts/{debtId}": {
+      "schema": "Debt",
+      "description": "User's debts and loans"
+    },
+    "/users/{userId}/transactions/{txnId}": {
+      "schema": "Transaction",
+      "description": "User's transactions"
+    }
+  }
+}

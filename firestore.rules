@@ -1,0 +1,187 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      // NOTE: For local dev and testing without full email verification enforcement usually it's better to just check request.auth != null
+      return request.auth != null; 
+    }
+    
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidUserStats(data) {
+      return data.keys().hasOnly(['totalBalance', 'totalDebt', 'totalLent', 'updatedAt'])
+        && data.totalBalance is number
+        && data.totalDebt is number
+        && data.totalLent is number
+        && data.updatedAt == request.time;
+    }
+
+    function isValidUserStatsCreate(data) {
+      return data.keys().hasAll(['totalBalance', 'totalDebt', 'totalLent', 'updatedAt'])
+        && data.keys().size() == 4
+        && data.totalBalance is number
+        && data.totalDebt is number
+        && data.totalLent is number
+        && data.updatedAt == request.time;
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn() && request.auth.uid == userId 
+        && isValidUserStatsCreate(incoming());
+      allow update: if (isSignedIn() && request.auth.uid == userId 
+        && isValidUserStats(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['totalBalance', 'totalDebt', 'totalLent', 'updatedAt']));
+    }
+
+    function isValidFund(data) {
+      return data.keys().hasOnly(['name', 'balance', 'color', 'createdAt', 'updatedAt'])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.balance is number
+        && data.color is string && data.color.size() <= 20
+        && data.createdAt is timestamp
+        && data.updatedAt == request.time;
+    }
+    
+    function isValidFundCreate(data) {
+      return data.keys().hasAll(['name', 'balance', 'color', 'createdAt', 'updatedAt'])
+        && data.keys().size() == 5
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.balance is number
+        && data.color is string && data.color.size() <= 20
+        && data.createdAt == request.time
+        && data.updatedAt == request.time;
+    }
+
+    match /users/{userId}/funds/{fundId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow create: if (isSignedIn() && request.auth.uid == userId
+        && isValidId(fundId)
+        && isValidFundCreate(incoming())
+        && exists(/databases/$(database)/documents/users/$(userId))); 
+      allow update: if (isSignedIn() && request.auth.uid == userId
+        && isValidId(fundId)
+        && isValidFund(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'balance', 'color', 'updatedAt']));
+      allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(fundId);
+    }
+    
+    function isValidDebt(data) {
+      return data.keys().hasOnly(['contactName', 'type', 'amount', 'createdAt', 'updatedAt'])
+        && data.contactName is string && data.contactName.size() > 0 && data.contactName.size() <= 100
+        && data.type is string && data.type in ['borrowed', 'lent']
+        && data.amount is number
+        && data.createdAt is timestamp
+        && data.updatedAt == request.time;
+    }
+
+    function isValidDebtCreate(data) {
+      return data.keys().hasAll(['contactName', 'type', 'amount', 'createdAt', 'updatedAt'])
+        && data.keys().size() == 5
+        && data.contactName is string && data.contactName.size() > 0 && data.contactName.size() <= 100
+        && data.type is string && data.type in ['borrowed', 'lent']
+        && data.amount is number
+        && data.createdAt == request.time
+        && data.updatedAt == request.time;
+    }
+
+    match /users/{userId}/debts/{debtId} {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow create: if (isSignedIn() && request.auth.uid == userId
+          && isValidId(debtId)
+          && isValidDebtCreate(incoming())
+          && exists(/databases/$(database)/documents/users/$(userId)));
+        allow update: if (isSignedIn() && request.auth.uid == userId
+          && isValidId(debtId)
+          && isValidDebt(incoming())
+          && incoming().createdAt == existing().createdAt
+          && incoming().type == existing().type
+          && incoming().diff(existing()).affectedKeys().hasOnly(['contactName', 'amount', 'updatedAt']));
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(debtId);
+    }
+
+    function isValidTransaction(data) {
+      return data.keys().hasOnly(['type', 'amount', 'description', 'contact', 'fundId', 'debtId', 'categoryId', 'date', 'createdAt'])
+        && data.type is string && data.type in ['income', 'expense', 'debt_increase', 'debt_decrease', 'lend_increase', 'lend_decrease']
+        && data.amount is number
+        && data.description is string && data.description.size() <= 500
+        && (!data.keys().hasAll(['contact']) || (data.contact is string && data.contact.size() <= 100))
+        && (!data.keys().hasAll(['fundId']) || (data.fundId is string && data.fundId.size() <= 128))
+        && (!data.keys().hasAll(['debtId']) || (data.debtId is string && data.debtId.size() <= 128))
+        && (!data.keys().hasAll(['categoryId']) || (data.categoryId is string && data.categoryId.size() <= 128))
+        && data.date is string && data.date.size() <= 30
+        && data.createdAt is timestamp;
+    }
+
+    function isValidTransactionCreate(data) {
+      return data.keys().hasAll(['type', 'amount', 'description', 'date', 'createdAt'])
+        && data.keys().size() >= 5
+        && data.keys().size() <= 9
+        && data.type is string && data.type in ['income', 'expense', 'debt_increase', 'debt_decrease', 'lend_increase', 'lend_decrease']
+        && data.amount is number
+        && data.description is string && data.description.size() <= 500
+        && (!data.keys().hasAll(['contact']) || (data.contact is string && data.contact.size() <= 100))
+        && (!data.keys().hasAll(['fundId']) || (data.fundId is string && data.fundId.size() <= 128))
+        && (!data.keys().hasAll(['debtId']) || (data.debtId is string && data.debtId.size() <= 128))
+        && (!data.keys().hasAll(['categoryId']) || (data.categoryId is string && data.categoryId.size() <= 128))
+        && data.date is string && data.date.size() <= 30
+        && data.createdAt == request.time;
+    }
+
+    match /users/{userId}/transactions/{txnId} {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow create: if (isSignedIn() && request.auth.uid == userId
+          && isValidId(txnId)
+          && isValidTransactionCreate(incoming())
+          && exists(/databases/$(database)/documents/users/$(userId)));
+        allow update: if (isSignedIn() && request.auth.uid == userId
+          && isValidId(txnId)
+          && isValidTransaction(incoming())
+          && incoming().createdAt == existing().createdAt
+          && incoming().diff(existing()).affectedKeys().hasOnly(['type', 'amount', 'description', 'contact', 'fundId', 'debtId', 'categoryId', 'date']));
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(txnId);
+    }
+    
+    function isValidCategoryMapping(data) {
+      return data.keys().hasOnly(['keyword', 'categoryId', 'updatedAt'])
+        && data.keyword is string && data.keyword.size() > 0 && data.keyword.size() <= 200
+        && data.categoryId is string && data.categoryId.size() <= 128
+        && data.updatedAt == request.time;
+    }
+
+    function isValidCategoryMappingCreate(data) {
+       return data.keys().hasAll(['keyword', 'categoryId', 'updatedAt'])
+         && data.keys().size() == 3
+         && data.keyword is string && data.keyword.size() > 0 && data.keyword.size() <= 200
+         && data.categoryId is string && data.categoryId.size() <= 128
+         && data.updatedAt == request.time;
+    }
+
+    match /users/{userId}/categoryMappings/{mappingId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow create: if (isSignedIn() && request.auth.uid == userId
+         && isValidId(mappingId)
+         && isValidCategoryMappingCreate(incoming()));
+      allow update: if (isSignedIn() && request.auth.uid == userId
+         && isValidId(mappingId)
+         && isValidCategoryMapping(incoming())
+         && incoming().diff(existing()).affectedKeys().hasOnly(['keyword', 'categoryId', 'updatedAt']));
+      allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(mappingId);
+    }
+  }
+}
