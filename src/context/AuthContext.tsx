@@ -27,18 +27,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (currentUser) {
         setUser(currentUser);
         // Initialize user stats if not exists
-        try {
-          const userRef = doc(db, 'users', currentUser.uid);
-          const userDoc = await getDoc(userRef);
-          if (!userDoc.exists()) {
-            await setDoc(userRef, {
-              totalBalance: 0,
-              totalDebt: 0,
-              totalLent: 0,
-              updatedAt: serverTimestamp()
-            });
-          }
-        catch (error) {
+    try {
+  const userRef = doc(db, 'users', currentUser.uid);
+  const userDoc = await getDoc(userRef);
+
+  if (!userDoc.exists()) {
+    await setDoc(userRef, {
+      totalBalance: 0,
+      totalDebt: 0,
+      totalLent: 0,
+      updatedAt: serverTimestamp()
+    });
+  }
+ catch (error) {
   console.error(error);
   setUser(currentUser);
 }
