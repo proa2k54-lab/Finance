@@ -38,9 +38,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               updatedAt: serverTimestamp()
             });
           }
-        } catch (error) {
-           handleFirestoreError(error, OperationType.GET, `users/${currentUser.uid}`);
-        }
+        catch (error) {
+  console.error(error);
+  setUser(currentUser);
+}
       } else {
         setUser(null);
       }
