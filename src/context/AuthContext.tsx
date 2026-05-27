@@ -33,13 +33,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithRedirect(auth, provider);
-    } catch (error) {
-      console.error('Error signing in', error);
-    }
-  };
+  const provider = new GoogleAuthProvider();
+
+  try {
+    await signInWithRedirect(auth, provider);
+  } catch (error) {
+    console.error("Error signing in:", error);
+  }
+};
 
   const logOut = async () => {
     try {
